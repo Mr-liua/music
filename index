@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>音乐播放器</title>
+</head>
+<style>
+    *{
+        margin: 0;
+        padding: 0;
+    }
+    .box{
+        width: 800px;
+        padding: 20px;
+        margin: 50px auto;
+        border:1px solid black;
+        font-size: 13px;
+    }
+    .album{
+        width: 300px;
+    }
+    .album img{
+        width: 280px;
+        height: 280px;
+        border-radius: 50%;
+    }
+    .control{
+        width: 100%;
+        display: flex;
+    }
+    .s_control{
+        width: 350px;
+    }
+    .sing_box{
+        margin: 30px 0 0 30px ;
+    }
+    .btn{
+        width: 200px;
+        position: relative;
+        margin: 15px 15px ;
+        top:0;
+        left:0;
+    }
+    .bar{
+        width: 200px;
+        height: 4px;
+        background-color: chartreuse;
+        position: absolute;
+        top:0;
+        left:0;
+    }
+    .now{
+        width: 100px;
+        height: 4px;
+        background-color: #ffd333;
+        position: absolute;
+        top:0;
+        left:0;
+    }
+    .yuan{
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background-color: aquamarine;
+        position: absolute;
+        top:-3px;
+        left:0;
+    }
+    .o1{
+        position: relative;
+        top:-24px;
+        right:-250px;
+    }
+    body{
+        background-image: url("110.jpg");
+        background-repeat: no-repeat;
+        background-position: center 0;
+        background-size: cover;
+        min-height: 100vh;
+    }
+    .btn0{
+        display: flex;
+        margin: 30px 20px 20px;
+        align-items: center;
+        justify-content: space-around;
+    }
+    .btn0 div{
+        background: url("002.png") no-repeat;
+    }
+    .btn0 .top{
+        width: 20px;
+        height: 20px;
+        background-position-y: -30px;
+    }
+    .btn0 .star{
+        width: 20px;
+        height: 30px;
+    }
+    .btn0 .down{
+        width: 20px;
+        height: 20px;
+        background-position-y: -52px;
+    }
+    .btn0 .moshi{
+        width: 28px;
+        height: 24px;
+        background-position-y: -72px;
+    }
+    ul{
+        list-style: none;
+    }
+    .listen_box{
+        width: 100%;
+        padding: 30px;
+        box-sizing: border-box;
+    }
+    .listen_box li{
+        height: 30px;
+        line-height: 30px;
+        display: flex;
+        justify-content: space-between;
+        border-bottom: 1px dashed gray;
+    }
+    .btn{
+        width: 200px;
+        height: 2px;
+        background-color: yellow;
+    }
+    .active{
+        background-color: aquamarine ;
+    }
+    .kuang{
+        position: absolute;
+        margin: 50px auto;
+        top:10px;
+        right:360px;
+    }
+</style>
+<body>
+<div>
+    <p class="pp"></p>
+</div>
+<div class="kuang">
+    <input type="text" id="searchTxt"><button id="searchBtn">搜索</button>
+</div>
+<!--做一个大盒子-->
+<div class="box">
+    <!--控制组件-->
+    <div class="control">
+        <!--专辑封面-->
+        <div class="album">
+            <img src="01.jpg" alt="">
+        </div>
+        <!--小控件-->
+        <div class="s_control">
+            <!--歌-->
+            <div class="sing_box">
+
+                <span class="song"></span>
+                <span class="singer"></span>
+            </div>
+            <!--进度条-->
+            <div class="btn">
+                <div class="bar">    </div>
+                <div class="now">    </div>
+                <!--小圆点-->
+                <div class="yuan">   </div>
+            </div>
+            <p class="o1">
+                <span class="currentTime">00:00</span>/
+                <span class="totalTime">00:00</span>
+            </p>
+
+            <div class="btn0">
+                <div class="top"></div>
+                <div class="star"> </div>
+                <div class="down"></div>
+                <div class="moshi"></div>
+            </div>
+        </div>
+    </div>
+    <!--音乐列表-->
+    <div class="listen_box">
+        <ul>
+            <li></li>
+        </ul>
+    </div>
+</div>
+<audio></audio>
+<script src="jquery-3.4.1.js"></script>
+<script>
+    var data=[];
+    // 获取元素
+    var audio=document.querySelector('audio');
+    var pic=document.querySelector('.album img');
+    var singer=document.querySelector('.sing_box span');
+    var star=document.querySelector('.btn0 .star');
+    var top1=document.querySelector('.btn0 .top');
+    var next1=document.querySelector('.btn0 .down');
+    var currentTime=document.querySelector('.o1 .currentTime');
+    var totalTime=document.querySelector('.o1 .totalTime');
+    var bar=document.querySelector(' .btn');
+    var yuan=document.querySelector('.yuan');
+    var now=document.querySelector('.now');
+    var modeBtn=document.querySelector('.moshi');
+    var listBox=document.querySelector('.listen_box ul');
+    var searchBtn=document.querySelector('#searchBtn');
+    var searchTxt=document.querySelector('#searchTxt');
+    var pp=document.querySelector('.pp');
+    var lis=null;
+    var index=0;
+    searchBtn.addEventListener('click',function () {
+        // 搜索音乐
+        // AJAX请求
+        $.ajax({
+            // searchMusic?name=不要说话
+            url: 'https://api.apiopen.top/searchMusic?',
+            data: {
+                name: searchTxt.value
+            },
+            type: 'get',
+            success: function (data2) {
+                data = data2.result;
+                // h2.innerHTML =data.title;
+                var str = '';
+                for (var i = 0; i < data.length; i++) {
+                    str += '<li><span>' + data[i].title + '</span><span>'
+                    for (var j=0;j<data[i].length;j++){
+                        str+=data[i].author+'  ';
+                    }
+                }
+                str += '</span></li>';
+                listBox.innerHTML = str;
+                lis = document.querySelectorAll('li');
+                lis[i].className='active';
+    },
+            error: function (err) {
+                console.log(err);
+            }
+        })
+    });
+    //标识当前第几首歌
+    // 旋转角度
+    var rotateDeg=0;
+    // 保存定时器
+    var timer=null;
+    // 标识当前播放顺序 1是循环2单曲3随机
+    var moshi=0;
+    // 保存图片的positionY轴的值
+    var moshiArr=[-203,-230,-72];
+    modeBtn.addEventListener('click',function () {
+        moshi=++moshi>moshiArr.length-1 ? 0:moshi;
+        console.log(moshi);
+        modeBtn.style.backgroundPositionY=moshiArr[moshi]+'px';
+    });
+    $('ul').on('click','li',function () {
+        index=$ (this).index();
+        audio.src='http://music.163.com/song/media/outer/url?id='+data[index].id+'.mp3';
+        init();
+        play();
+    });
+    // 创建一个初始化的方法
+    //初始化专辑封面 歌手，歌曲名，播放时长和路径
+    function init(){
+        rotateDeg=0;
+        var songStr='';
+        for (var i=0;i<data[index].length;i++){
+            clearInterval(timer);
+            songStr+=data[index][i].name+'  ';
+            singer.innerHTML=data[index].name+'---'+songStr;
+            // 切换列表选中项
+            for(var j = 0 ; j<data.length;j++){
+                lis[j].className = '';
+            }
+            lis[index].className = 'active';
+        }
+    }
+    var str='';
+    function play(){
+        pic.src= data[index].pic;
+        pp.innerHTML='<span>'+data[index].author+'-------'+data[index].title+'</span>';
+        audio.src='http://music.163.com/song/media/outer/url?id='+data[index].songid+'.mp3';
+        audio.play();
+        // 播放按钮变成暂停
+        star.style.backgroundPositionX=-30+'px';
+        // 专辑旋转
+        clearInterval(timer);
+        timer=setInterval(function () {
+            rotateDeg++;
+            pic.style.transform='rotate('+rotateDeg+'deg)';
+        },30);
+    }
+    // 播放
+    star.addEventListener('click',function () {
+        if(audio.paused){
+            play();
+        }else{
+            audio.pause();
+            star.style.backgroundPositionX=0+'px';
+            clearInterval(timer);
+        }
+    })
+    // 上一曲
+    top1.addEventListener('click',function () {
+        index= --index < 0 ? data.length-1:index;
+        init();
+        play();
+    });
+    // 下一曲
+    next1.addEventListener('click',function () {
+        index= ++index >data.length-1 ?index= 0:index;
+        init();
+        play();
+    });
+    // 时间
+    audio.addEventListener('canplay',function () {
+        var min=parseInt(audio.duration/60);
+        var s=parseInt(audio.duration % 60);
+        totalTime.innerHTML =formatTime(min)+':'+formatTime(s);
+        audio.addEventListener('timeupdate',function () {
+            var currentmin=parseInt(audio.currentTime/60);
+            var currents=parseInt(audio.currentTime % 60);
+            currentTime.innerHTML=formatTime(currentmin)+':'+formatTime(currents);
+            var left=audio.currentTime/audio.duration*bar.clientWidth;
+            yuan.style.left=left+'px';
+            now.style.width=left+'px';
+            if(audio.ended){
+                switch(moshi){
+                    case 0:
+                        index = ++index >data.length -1 ? 0:index;
+                        init();
+                        play();
+                        break;
+                    case 1 :
+                        init();
+                        play();
+                        break;
+                    case 2 :
+                        index=Math.floor(Math.random()*data.length);
+                        init();
+                        play();
+                        break;
+                }
+            }
+        });
+        bar.addEventListener('click',function (e) {
+            // 找到鼠标的位置
+            audio.currentTime= e.offsetX/bar.clientWidth *audio.duration;
+            console.log(bar.clientWidth)
+        })
+    })
+    function  formatTime(time) {
+        return time >9 ?time:'0'+time;
+    }
+</script>
+</body>
+</html>
